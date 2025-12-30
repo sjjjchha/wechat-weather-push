@@ -115,6 +115,8 @@ class WeChatService:
             else:  # 周日
                 days_until_saturday = 6
             
+            print(f"📅 调试: 节假日={closest_holiday}, 周六还有{days_until_saturday}天, 当前周{current_weekday}")
+            
             if closest_holiday[0] < days_until_saturday or (closest_holiday[0] == days_until_saturday and days_until_saturday > 0):
                 return f"还有{closest_holiday[0]}天就是{closest_holiday[1]}啦！"
         
@@ -174,9 +176,9 @@ class WeChatService:
             "template_id": self.template_id,
             "data": {
                 "date": {"value": f"{date_str} {week}", "color": "#FF1493"},
-                "city": {"value": city_name, "color": "#00CED1"},
-                "weather": {"value": weather_data.get('weather', '未知'), "color": "#FF6347"},
-                "temperature": {"value": f"{weather_data.get('min_temp', '--')}~{weather_data.get('max_temp', '--')}", "color": "#0099FF"},
+                "city": {"value": f"📍{city_name}", "color": "#00CED1"},
+                "weather": {"value": f"🌤️{weather_data.get('weather', '未知')}", "color": "#FF6347"},
+                "temperature": {"value": f"🌡️{weather_data.get('min_temp', '--')}~{weather_data.get('max_temp', '--')}", "color": "#0099FF"},
                 "love_days": {"value": str(self.get_love_days()), "color": "#FF1493"},
                 "holiday": {"value": holiday_reminder, "color": "#FFD700"},
                 "encouragement": {"value": encouragement, "color": "#FF69B4"},
