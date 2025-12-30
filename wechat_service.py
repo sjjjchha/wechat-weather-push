@@ -107,8 +107,15 @@ class WeChatService:
         
         # 如果有节假日且比周六更近,优先显示节假日
         if closest_holiday:
-            days_until_saturday = (5 - current_weekday) % 7  # 计算到周六的天数
-            if closest_holiday[0] <= days_until_saturday:
+            # 计算到下一个周六的天数
+            if current_weekday < 5:  # 周一到周五
+                days_until_saturday = 5 - current_weekday
+            elif current_weekday == 5:  # 已经是周六
+                days_until_saturday = 0
+            else:  # 周日
+                days_until_saturday = 6
+            
+            if closest_holiday[0] < days_until_saturday or (closest_holiday[0] == days_until_saturday and days_until_saturday > 0):
                 return f"还有{closest_holiday[0]}天就是{closest_holiday[1]}啦！"
         
         # 返回周末提醒
