@@ -98,17 +98,31 @@ class WeChatService:
         min_days = 999
         
         for month, day, name in holidays_2025:
+            # 先尝试今年的日期
             holiday_date = datetime.datetime(today.year, month, day)
-            if holiday_date > today:
-                days_diff = (holiday_date - today).days
-                if days_diff < min_days:
-                    min_days = days_diff
-                    closest_holiday = (days_diff, name)
+            
+            # 如果今年的日期已过,尝试明年的日期
+            if holiday_date <= today:
+                holiday_date = datetime.datetime(today.year + 1, month, day)
+            
+            days_diff = (holiday_date - today).days
+            if days_diff < min_days and days_diff >= 0:
+                min_days = days_diff
+                closest_holiday = (days_diff, name)
         
         # 如果有节假日且比周六更近,优先显示节假日
-        if closest_holiday and current_weekday < 5:
-            days_until_saturday = 5 - current_weekday
-            if closest_holiday[0] <= days_until_saturday:
+        if closest_holiday:
+            # 计算到下一个周六的天数
+            if current_weekday < 5:  # 周一到周五
+                days_until_saturday = 5 - current_weekday
+            elif current_weekday == 5:  # 已经是周六
+                days_until_saturday = 0
+            else:  # 周日
+                days_until_saturday = 6
+            
+            print(f"📅 调试: 节假日={closest_holiday}, 周六还有{days_until_saturday}天, 当前周{current_weekday}")
+            
+            if closest_holiday[0] < days_until_saturday or (closest_holiday[0] == days_until_saturday and days_until_saturday > 0):
                 return f"还有{closest_holiday[0]}天就是{closest_holiday[1]}啦！"
         
         # 返回周末提醒
