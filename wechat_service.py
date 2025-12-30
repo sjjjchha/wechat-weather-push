@@ -50,7 +50,10 @@ class WeChatService:
     
     def get_next_holiday(self):
         """计算下一个休息日或节假日(已修复跨年bug)"""
-        today = datetime.datetime.now()
+        # 使用北京时间
+        import pytz
+        beijing_tz = pytz.timezone('Asia/Shanghai')
+        today = datetime.datetime.now(beijing_tz)
         current_weekday = today.weekday()  # 0=星期一, 6=星期日
         
         # 2025年法定节假日(格式: (month, day, '名称'))
@@ -98,12 +101,12 @@ class WeChatService:
         min_days = 999
         
         for month, day, name in holidays_2025:
-            # 先尝试今年的日期
-            holiday_date = datetime.datetime(today.year, month, day)
+            # 先尝试今年的日期(北京时区)
+            holiday_date = beijing_tz.localize(datetime.datetime(today.year, month, day))
             
             # 如果今年的日期已过,尝试明年的日期
             if holiday_date <= today:
-                holiday_date = datetime.datetime(today.year + 1, month, day)
+                holiday_date = beijing_tz.localize(datetime.datetime(today.year + 1, month, day))
             
             days_diff = (holiday_date - today).days
             if days_diff < min_days and days_diff >= 0:
