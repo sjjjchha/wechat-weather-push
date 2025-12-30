@@ -1,0 +1,38 @@
+name: 微信天气推送
+
+on:
+  # 定时任务 - 每天早上8:00执行(北京时间)
+  schedule:
+    - cron: '0 0 * * *'  # UTC时间00:00,即北京时间08:00
+  
+  # 手动触发
+  workflow_dispatch:
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+    
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: 安装依赖
+      run: |
+        pip install -r requirements.txt
+    
+    - name: 运行推送脚本
+      env:
+        AMAP_KEY: ${{ secrets.AMAP_KEY }}
+        CITY_NAME: ${{ secrets.CITY_NAME }}
+        WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+        WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+        WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
+        WECHAT_USER_ID: ${{ secrets.WECHAT_USER_ID }}
+        LOVE_DATE: ${{ secrets.LOVE_DATE }}
+      run: |
+        python main.py
