@@ -49,7 +49,7 @@ class WeChatService:
             return 0
     
     def get_next_holiday(self):
-        """计算下一个休息日或节假日"""
+        """计算下一个休息日或节假日(已修复跨年bug)"""
         today = datetime.datetime.now()
         current_weekday = today.weekday()  # 0=星期一, 6=星期日
         
