@@ -4,6 +4,7 @@ import requests
 import datetime
 import random
 import os
+import pytz
 
 class WeChatService:
     """微信推送服务"""
@@ -51,7 +52,6 @@ class WeChatService:
     def get_next_holiday(self):
         """计算下一个休息日或节假日(已修复跨年bug)"""
         # 使用北京时间
-        import pytz
         beijing_tz = pytz.timezone('Asia/Shanghai')
         today = datetime.datetime.now(beijing_tz)
         current_weekday = today.weekday()  # 0=星期一, 6=星期日
