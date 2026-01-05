@@ -49,8 +49,11 @@ class WeChatService:
             return 0
     
     def get_next_holiday(self):
-        """计算下一个休息日或节假日"""
-        today = datetime.datetime.now()
+        """计算下一个休息日或节假日(已修复跨年bug)"""
+        # 使用北京时间
+        import pytz
+        beijing_tz = pytz.timezone('Asia/Shanghai')
+        today = datetime.datetime.now(beijing_tz)
         current_weekday = today.weekday()  # 0=星期一, 6=星期日
         
         # 2025年法定节假日(格式: (month, day, '名称'))
@@ -98,12 +101,17 @@ class WeChatService:
         min_days = 999
         
         for month, day, name in holidays_2025:
-            holiday_date = datetime.datetime(today.year, month, day)
-            if holiday_date > today:
-                days_diff = (holiday_date - today).days
-                if days_diff < min_days:
-                    min_days = days_diff
-                    closest_holiday = (days_diff, name)
+            # 先尝试今年的日期(北京时区)
+            holiday_date = beijing_tz.localize(datetime.datetime(today.year, month, day))
+            
+            # 如果今年的日期已过,尝试明年的日期
+            if holiday_date <= today:
+                holiday_date = beijing_tz.localize(datetime.datetime(today.year + 1, month, day))
+            
+            days_diff = (holiday_date - today).days
+            if days_diff < min_days and days_diff >= 0:
+                min_days = days_diff
+                closest_holiday = (days_diff, name)
         
         # 如果有节假日且比周六更近,优先显示节假日
         if closest_holiday:
@@ -115,7 +123,8 @@ class WeChatService:
             else:  # 周日
                 days_until_saturday = 6
             
-            print(f"📅 调试: 节假日={closest_holiday}, 周六还有{days_until_saturday}天, 当前周{current_weekday}")
+            print(f"📅 [DEBUG] 节假日={closest_holiday}, 周六={days_until_saturday}天, 当前周{current_weekday}, 北京时间={today.strftime('%Y-%m-%d %H:%M')}")
+            print(f"📅 [DEBUG] 判断: {closest_holiday[0]} < {days_until_saturday} = {closest_holiday[0] < days_until_saturday}")
             
             if closest_holiday[0] < days_until_saturday or (closest_holiday[0] == days_until_saturday and days_until_saturday > 0):
                 return f"还有{closest_holiday[0]}天就是{closest_holiday[1]}啦！"
@@ -134,7 +143,8 @@ class WeChatService:
         ]
         return random.choice(encouragements)
     
-def get_sweet_words(self):
+
+    def get_sweet_words(self):
         """获取随机情话"""
         words = [
             "我喜欢你,认真且怂,从一而终。",
@@ -211,6 +221,7 @@ def get_sweet_words(self):
             "你是我唯一的选择，从来都是。"
         ]
         return random.choice(words)
+
     
     def send_template_message(self, city_name, weather_data):
         """发送模板消息"""
@@ -240,9 +251,10 @@ def get_sweet_words(self):
             "template_id": self.template_id,
             "data": {
                 "date": {"value": f"{date_str} {week}", "color": "#FF1493"},
-                "city": {"value": f"📍{city_name}", "color": "#00CED1"},
-                "weather": {"value": f"🌤️{weather_data.get('weather', '未知')}", "color": "#FF6347"},
-                "temperature": {"value": f"🌡️{weather_data.get('min_temp', '--')}~{weather_data.get('max_temp', '--')}", "color": "#0099FF"},
+                "city": {"value": city_name, "color": "#00CED1"},
+                "weather": {"value": weather_data.get('weather', '未知'), "color": "#FF6347"},
+                "min_temp": {"value": weather_data.get('min_temp', '--'), "color": "#00BFFF"},
+                "max_temp": {"value": weather_data.get('max_temp', '--'), "color": "#FF6347"},
                 "love_days": {"value": str(self.get_love_days()), "color": "#FF1493"},
                 "holiday": {"value": holiday_reminder, "color": "#FFD700"},
                 "encouragement": {"value": encouragement, "color": "#FF69B4"},
